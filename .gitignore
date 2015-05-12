@@ -1,0 +1,15 @@
+.classpath
+.project
+.settings
+.DS_Store
+dependency-reduced-pom.xml
+target/
+*.iml
+*.ipr
+*.iws
+*.swp
+.idea
+.forge_settings
+.factorypath
+atlassian-ide-plugin.xml
+.externalToolBuilders
