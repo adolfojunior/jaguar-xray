@@ -42,7 +42,7 @@ $ http://localhost:8080/your_application/jaguarxray
 ----
 
 * Client to Remote Applications
-Use this hosted html to visualize remote applications. 
-----
-$ link:https://rawgit.com/adolfojunior/jaguar-xray/master/src/main/resources/jaguar-xray-resources/client.html
-----
+
+Use this hosted html to visualize remote applications.
+ 
+link:https://rawgit.com/adolfojunior/jaguar-xray/master/src/main/resources/jaguar-xray-resources/client.html
