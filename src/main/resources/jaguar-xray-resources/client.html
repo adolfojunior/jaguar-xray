@@ -36,7 +36,7 @@
             <div class="container">
                 <div class="navbar-header">
                     <a class="navbar-brand" href="/">
-                        <i class="fa fa-paw fa-4"></i> Jaguar App XRay
+                        <i class="fa fa-paw fa-4"></i> Jaguar XRay
                     </a>
                 </div>
             </div>
@@ -143,13 +143,48 @@
                         <i class="fa fa-times fa-1"></i>
                     </a>
                 </tab-heading>
-                <div>
-                    <track-nodes execution="execution" expanded="true"></track-nodes>
-                </div>
+
+                <h3>({{execution.duration}} ms) - {{execution.info}}</h3>
+
+                <track-nodes execution="execution" expanded="true"></track-nodes>
+
             </tab>
         </tabset>
 
     </div>
+
+    <script type="text/ng-template" id="NodesModalTemplate">
+        <div class="modal-header">
+            <h3 class="modal-title">Children</h3>
+        </div>
+        <div class="modal-body">
+            <table class="table table-bordered table-condensed table-hover ">
+                <thead>
+                    <tr>
+                        <th>Index</th>
+                        <th>Info</th>
+                        <th>Time Start</th>
+                        <th>Duration</th>
+                        <th>Nodes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="node in nodes">
+                        <th scope="row">{{node.index}}</th>
+                        <td>
+                            <i class="track-error fa fa-exclamation-triangle" ng-if="node.error"></i> ...{{node.info | limitTo:-60}}
+                        </td>
+                        <td>{{node.timeStart}}</td>
+                        <td>{{node.duration}}</td>
+                        <td>{{node.nodeCount}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-warning" ng-click="close()">Fechar</button>
+        </div>
+    </script>
 
     <script type="text/ng-template" id="JsonModalTemplate">
         <div class="modal-header">
@@ -166,12 +201,20 @@
     <script type="text/ng-template" id="TrackNodesTemplate">
         <div class="track-nodes">
             <div>
+
                 <a ng-click="toggle()">
                     <i class="fa fa-1" ng-class="{'fa-minus':expanded,'fa-plus':!expanded}"></i>
                 </a>
+
+                <span ng-if="nodes"> [ {{nodes.length}} children ] </span>
+
+                <button class="btn btn-xs btn-default" ng-if="nodes" ng-click="listChildren()">
+                    <i class="fa fa-list-ul fa-1"></i>
+                </button>
+
             </div>
             <ul ng-if="nodes" ng-show="expanded">
-                <li ng-repeat="node in nodes | trackDuration">
+                <li ng-repeat="node in nodes | trackDuration: 1">
                     <track-node execution="execution" parent="parent" node="node"></track-node>
                 </li>
             </ul>
@@ -180,7 +223,8 @@
 
     <script type="text/ng-template" id="TrackNodeTemplate">
         <div class="track-node">
-            <i class="track-error fa fa-exclamation-triangle" ng-if="hasError()"></i> ({{node.duration}} ms) - {{node.info}}
+            <i class="track-error fa fa-exclamation-triangle" ng-if="hasError()" tooltip="{{node.error}}"></i>
+            <span>({{node.duration}} ms - {{percent()}}%) - {{node.info}}</span>
             <div class="progress">
                 <div class="progress-bar progress-bar-{{progressType()}}" style="width: {{percent()}}%">
                     <span class="sr-only">{{percent()}} %</span>
@@ -191,26 +235,25 @@
 
     <script>
     // create the module and name it scotchApp
-    var app = angular.module('app', ['ngCookies', 'ui.bootstrap']);
+    var app = angular.module('app', ['ui.bootstrap']);
 
+    app.factory('appConfig', function() {
 
-    app.factory('appConfig', function($cookieStore) {
-
-        var appUrl = $cookieStore.get('appurl');
-        if (!appUrl) {
-        	appUrl = window.location.href;
-        	appUrl = appUrl.substring(0, appUrl.indexOf('/jaguar-xray'));
+        function parseUrl(url) {
+            var parts = /(http[s]?:\/\/[^\/]+)(\/[^\/]+).*/.exec(url);
+            if (parts) {
+                return parts[1] + parts[2];
+            }
+            return '';
         }
-        
-        var minDuration = 0;
+
+        var appUrl = parseUrl(window.location.href);
+        var minDuration = 1;
 
         return {
 
             setAppUrl: function(url) {
-            	if (url) {
-            		$cookieStore.put('appurl', url);
-            	}
-                appUrl = url;
+                appUrl = parseUrl(url);
             },
             setMinDuration: function(min) {
                 minDuration = min || 0;
@@ -225,59 +268,67 @@
         };
     });
 
-    app.filter('trackDuration', function(appConfig) {
-        return function(nodes) {
-            var min = appConfig.getMinDuration();
-            var array = [];
-            angular.forEach(nodes, function(node) {
-                if (node.duration >= min) {
-                    array.push(node);
-                }
-            });
-            return array;
-        };
-    });
-
     app.service('trackService', function($q, $http, appConfig) {
 
         return {
 
-            _get: function(params, cached) {
-                return $http.get(appConfig.getAppUrl() + '/jaguar-xray-viewer', {
-                    cache: cached,
-                    params: (params || {})
-                });
+            _get: function(action, params, cached) {
+
+                var d = $q.defer();
+
+                $http.get(appConfig.getAppUrl() + '/jaguarxray/' + action, {
+                    cache: cached ? true : false,
+                    params: params
+                }).success(d.resolve).error(d.reject);
+
+                return d.promise;
             },
 
             clear: function() {
-                return this._get({
-                    clear: true
-                }, false);
+                return this._get('clear');
             },
 
-            all: function() {
-                return this._get(null, false);
+            list: function() {
+                return this._get('list', null);
             },
 
-            get: function(id) {
-                return this._get({
+            nodes: function(id) {
+                return this._get('nodes', {
                     id: id
                 }, true);
             },
 
-            nodes: function(id, parent) {
-                return this._get({
-                    id: id,
-                    parent: parent || 0
-                }, true);
-            },
+            children: function(id, parent) {
 
-            allNodes: function(id) {
-                return this._get({
-                    id: id,
-                    parent: 'all'
-                }, true);
+                var d = $q.defer();
+
+                this.nodes(id).then(function(nodes) {
+
+                    var array = [];
+                    angular.forEach(nodes, function(node) {
+                        if (node.parentIndex == parent) {
+                            array.push(node);
+                        }
+                    });
+                    d.resolve(array);
+
+                }, d.reject);
+
+                return d.promise;
             }
+        };
+    });
+
+    app.filter('trackDuration', function(appConfig) {
+        return function(nodes) {
+            var array = [];
+            var min = appConfig.getMinDuration();
+            angular.forEach(nodes, function(node) {
+                if (node.nodeCount > 0 && node.duration >= min) {
+                    array.push(node);
+                }
+            });
+            return array;
         };
     });
 
@@ -292,7 +343,23 @@
     });
 
     // create the controller and inject Angular's $scope
-    app.controller('MainController', function($modal, trackService, appConfig) {
+    app.controller('NodesModalController', function($scope, $modalInstance, trackService, id, parent) {
+
+        $scope.nodes = [];
+
+        trackService
+            .children(id, parent)
+            .then(function(nodes) {
+                $scope.nodes = nodes;
+            });
+
+        $scope.close = function() {
+            $modalInstance.dismiss('close');
+        };
+    });
+
+    // create the controller and inject Angular's $scope
+    app.controller('MainController', function($modal, appConfig, trackService) {
 
         this.appUrl = appConfig.getAppUrl();
         this.query = '';
@@ -300,20 +367,22 @@
         this.tabs = [];
 
         this.change = function() {
-        	if (this.appUrl) {
-        		
-        		appConfig.setAppUrl(this.appUrl);
+            if (this.appUrl) {
 
-            	this.update();
-        	}
+                appConfig.setAppUrl(this.appUrl);
+
+                this.appUrl = appConfig.getAppUrl();
+
+                this.update();
+            }
         };
 
         this.update = function() {
             if (this.appUrl) {
                 trackService
-                    .all()
-                    .success(angular.bind(this, function(executions) {
-                        this.executions = executions.reverse();
+                    .list()
+                    .then(angular.bind(this, function(executions) {
+                        this.executions = executions ? executions.reverse() : [];
                     }));
             }
         };
@@ -321,21 +390,17 @@
         this.clear = function() {
             trackService
                 .clear()
-                .success(angular.bind(this, function() {
+                .then(angular.bind(this, function() {
                     this.executions = [];
                 }));
         };
 
-        this.addTab = function(exec) {
-            if (this.tabs.indexOf(exec) == -1) {
-                trackService
-                    .get(exec.executionId)
-                    .success(angular.bind(this, function(execution) {
+        this.addTab = function(execution) {
+            if (this.tabs.indexOf(execution) == -1) {
 
-                        execution.active = true;
+                execution.active = true;
 
-                        this.tabs.push(execution);
-                    }));
+                this.tabs.push(execution);
             }
         };
 
@@ -362,8 +427,7 @@
 
 
 
-    app
-        .directive('trackNodes', function() {
+    app.directive('trackNodes', function() {
             return {
                 restrict: "E",
                 scope: {
@@ -372,18 +436,19 @@
                     expanded: '=?'
                 },
                 templateUrl: 'TrackNodesTemplate',
-                controller: function($scope, trackService) {
+                controller: function($scope, $modal, trackService) {
 
                     function load() {
                         trackService
-                            .nodes($scope.execution.executionId, $scope.parent ? $scope.parent.index : 0)
-                            .success(function(nodes) {
+                            .children($scope.execution.executionId, $scope.parent ? $scope.parent.index : 0)
+                            .then(function(nodes) {
                                 $scope.nodes = nodes;
                                 $scope.expanded = true;
                             });
                     }
 
                     $scope.nodes = false;
+
                     $scope.toggle = function() {
                         $scope.expanded = !$scope.expanded;
                         if (!$scope.nodes) {
@@ -391,14 +456,32 @@
                         }
                     };
 
-                    $scope.expanded = $scope.expanded ? true : false;
-                    if ($scope.expanded) {
+                    $scope.listChildren = function() {
+                        var id = $scope.execution.executionId;
+                        var parent = $scope.parent ? $scope.parent.index : 0;
+                        $modal.open({
+                            animation: true,
+                            controller: 'NodesModalController',
+                            templateUrl: 'NodesModalTemplate',
+                            size: 'lg',
+                            resolve: {
+                                id: function() {
+                                    return id;
+                                },
+                                parent: function() {
+                                    return parent;
+                                }
+                            }
+                        });
+                    }
+
+                    if ($scope.expanded === true) {
                         load();
                     }
                 }
             }
         })
-        .directive('trackNode', function($compile, trackService) {
+        .directive('trackNode', function($compile, appConfig, trackService) {
             return {
                 restrict: "E",
                 scope: {
@@ -426,7 +509,6 @@
                     };
 
                     scope.hasError = function() {
-                        console.log(scope.node.error);
                         return scope.node.error && scope.node.error.length > 0;
                     };
 

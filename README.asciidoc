@@ -4,7 +4,7 @@ Development tool, to inpect Jaguar code flow.
 
 == Setup
 
-* Maven dependency
+* Maven dependency in pom.xml
 [source,xml]
 ----
 <dependency>
@@ -14,7 +14,7 @@ Development tool, to inpect Jaguar code flow.
 </dependency> 
 ----
 
-* Configure track Http Filter
+* Configure track Filter in web.xml
 [source,xml]
 ----
 <filter>
@@ -27,7 +27,16 @@ Development tool, to inpect Jaguar code flow.
 </filter-mapping> 
 ----
 
-* Cliente URL
+* Configure CDI interceptor in beans.xml
+[source,xml]
+----
+<interceptors>
+	<class>br.com.cubekode.jaguar.xray.cdi.AppTrackInterceptor</class>
+	<class>com.powerlogic.jcompany.controller.jsf.interceptors.PlcExceptionInterceptor</class>
+</interceptors>
+----
+
+* Client URL
 ----
 $ http://localhost:8080/your_application/jaguar-xray-viewer/client
 ----

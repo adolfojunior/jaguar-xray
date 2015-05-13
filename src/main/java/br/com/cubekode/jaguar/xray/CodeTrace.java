@@ -22,7 +22,7 @@ public abstract class CodeTrace {
 
 	public void finish(String error) {
 		this.error = error;
-		finish();
+		this.finish();
 	}
 
 	public Map<String, Object> toMap() {
@@ -31,13 +31,13 @@ public abstract class CodeTrace {
 		m.put("timeStart", getTimeStart());
 		m.put("timeEnd", getTimeEnd());
 		m.put("duration", getDuration());
-		m.put("nodeCount", getDuration());
+		m.put("nodeCount", getNodeCount());
 		m.put("info", getInfo());
 		m.put("error", getError());
 		return m;
 	}
 
-	protected void end() {
+	protected void endTime() {
 		if (timeEnd == 0) {
 			timeEnd = System.currentTimeMillis();
 		}
@@ -75,7 +75,7 @@ public abstract class CodeTrace {
 		return error;
 	}
 
-	protected int nextNodeCount() {
+	protected int countNode() {
 		return ++this.nodeCount;
 	}
 

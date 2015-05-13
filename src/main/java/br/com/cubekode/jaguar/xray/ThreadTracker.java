@@ -3,7 +3,7 @@ package br.com.cubekode.jaguar.xray;
 import java.lang.reflect.Method;
 
 
-public final class TrackThread {
+public final class ThreadTracker {
 
 	private static TrackProvider PROVIDER = new TrackProvider();
 

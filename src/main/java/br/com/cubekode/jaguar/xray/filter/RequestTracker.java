@@ -2,25 +2,28 @@ package br.com.cubekode.jaguar.xray.filter;
 
 import java.security.Principal;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
 import br.com.cubekode.jaguar.xray.CodeTrace;
-import br.com.cubekode.jaguar.xray.TrackThread;
+import br.com.cubekode.jaguar.xray.ThreadTracker;
 
-public class AppTrackRequest {
+public class RequestTracker {
 
 	private static final String ANONYMOUS = "anonymous";
 
+	private static final List<String> INVALID_EXTENSIONS = Arrays.asList(".css", ".js", ".ecss", ".png", ".jpg", ".gif");
+
 	public static CodeTrace traceRequest(HttpServletRequest request) {
-		return TrackThread.traceExecution(requestInfo(request));
+		return ThreadTracker.traceExecution(buildRequestInfo(request));
 	}
 
-	public static String requestInfo(HttpServletRequest request) {
+	public static String buildRequestInfo(HttpServletRequest request) {
 
 		Principal principal = request.getUserPrincipal();
 
-		String user = principal != null ? principal.getName() : ANONYMOUS;
+		String user = principal != null ? principal.getName() : null;
 		String type = request.getMethod();
 		String url = request.getRequestURL().toString();
 
@@ -28,9 +31,11 @@ public class AppTrackRequest {
 	}
 
 	public static boolean isTrackRequest(HttpServletRequest request) {
-		String uri = request.getRequestURI();
-		if (uri.contains("/f/") || uri.contains(".xhtml")) {
-			for (String ext : Arrays.asList(".css", ".js", ".ecss", ".png", ".jpg", ".gif")) {
+
+		String uri = request.getRequestURI().toLowerCase();
+
+		if (uri.contains("/f/") || uri.endsWith(".xhtml")) {
+			for (String ext : INVALID_EXTENSIONS) {
 				if (uri.endsWith(ext)) {
 					return false;
 				}

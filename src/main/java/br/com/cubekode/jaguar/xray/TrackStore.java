@@ -36,10 +36,7 @@ public class TrackStore {
 	private Map<String, CodeExecution> map = Collections.synchronizedMap(new LRUTrackExecution(MAX_LRU));
 
 	public void add(CodeExecution execution) {
-
 		map.put(execution.getExecutionId(), execution);
-
-		System.out.println("### APP TRACK: " + execution);
 	}
 
 	public List<Map<String, Object>> all() {
@@ -47,21 +44,17 @@ public class TrackStore {
 	}
 
 	public Map<String, Object> get(String id) {
+		if (id == null || id.isEmpty()) {
+			return null;
+		}
 		return map.get(id).toMap();
 	}
 
 	public List<Map<String, Object>> nodes(String id) {
-		return convert(map.get(id).getNodes());
-	}
-
-	public List<Map<String, Object>> nodes(String id, long parent) {
-		List<CodeNode> nodes = new LinkedList<CodeNode>();
-		for (CodeNode node : map.get(id).getNodes()) {
-			if (node.getParentIndex() == parent) {
-				nodes.add(node);
-			}
+		if (id == null || id.isEmpty()) {
+			return Collections.emptyList();
 		}
-		return convert(nodes);
+		return convert(map.get(id).getNodes());
 	}
 
 	public void clear() {

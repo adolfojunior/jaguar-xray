@@ -46,7 +46,7 @@ public class CodeExecution extends CodeTrace {
 		while (!stack.isEmpty()) {
 
 			CodeNode poped = stack.pop();
-			poped.end();
+			poped.endTime();
 
 			if (poped == node) {
 				return poped;
@@ -64,16 +64,16 @@ public class CodeExecution extends CodeTrace {
 	}
 
 	public void finish() {
-		end();
+		endTime();
 	}
 
-	protected long nextError() {
+	protected long countError() {
 		return ++errorCount;
 	}
 
 	@Override
-	protected void end() {
-		super.end();
+	protected void endTime() {
+		super.endTime();
 		if (stack != null) {
 			popNode(null);
 			stack = null;

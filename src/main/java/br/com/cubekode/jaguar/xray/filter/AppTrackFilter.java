@@ -12,8 +12,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import br.com.cubekode.jaguar.xray.CodeTrace;
-import br.com.cubekode.jaguar.xray.viewer.TrackViewer;
+import br.com.cubekode.jaguar.xray.viewer.XRayViewer;
 
+/**
+ * @author adolfojunior
+ * TODO rename RequestFilterTracker
+ */
 public class AppTrackFilter implements Filter {
 
 	@Override
@@ -30,11 +34,12 @@ public class AppTrackFilter implements Filter {
 	}
 
 	protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-		if (TrackViewer.isViewerUrl(request)) {
+		
+		if (XRayViewer.getInstance().isViewerUrl(request)) {
 			
-			TrackViewer.viewer(request, response);
+			XRayViewer.getInstance().process(request, response);
 			
-		} else if (AppTrackRequest.isTrackRequest(request)) {
+		} else if (RequestTracker.isTrackRequest(request)) {
 			
 			doTraceFilter(request, response, chain);
 			
@@ -45,7 +50,9 @@ public class AppTrackFilter implements Filter {
 	}
 
 	protected void doTraceFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-		CodeTrace trace = AppTrackRequest.traceRequest(request);
+		
+		CodeTrace trace = RequestTracker.traceRequest(request);
+		
 		try {
 			chain.doFilter(request, response);
 		} finally {

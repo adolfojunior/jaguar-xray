@@ -21,7 +21,7 @@ public class TrackProvider {
 
 		long timestamp = System.currentTimeMillis();
 
-		return new CodeNode(execution, parent, execution.nextNodeCount(), timestamp, info);
+		return new CodeNode(execution, parent, execution.countNode(), timestamp, info);
 	}
 
 	protected String createExecutionId(long timestamp) {

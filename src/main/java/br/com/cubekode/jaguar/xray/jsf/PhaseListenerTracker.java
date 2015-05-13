@@ -9,11 +9,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import br.com.cubekode.jaguar.xray.CodeTrace;
-import br.com.cubekode.jaguar.xray.TrackThread;
-import br.com.cubekode.jaguar.xray.filter.AppTrackRequest;
-import br.com.cubekode.jaguar.xray.viewer.TrackViewer;
+import br.com.cubekode.jaguar.xray.ThreadTracker;
+import br.com.cubekode.jaguar.xray.filter.RequestTracker;
+import br.com.cubekode.jaguar.xray.viewer.XRayViewer;
 
-public class AppPhaseListenerTrack implements PhaseListener {
+public class PhaseListenerTracker implements PhaseListener {
 
 	private static final long serialVersionUID = 1L;
 
@@ -26,17 +26,19 @@ public class AppPhaseListenerTrack implements PhaseListener {
 
 		HttpServletRequest request = getRequest(event);
 
-		if (TrackViewer.isViewerUrl(request)) {
+		if (XRayViewer.getInstance().isViewerUrl(request)) {
+			
 			processViewer(event);
+			
 		} else {
 
 			if (getTrace(request, TYPE_JSF) == null) {
-				setTrace(request, TYPE_JSF, AppTrackRequest.traceRequest(request));
+				setTrace(request, TYPE_JSF, RequestTracker.traceRequest(request));
 			}
 
 			String phase = event.getPhaseId().toString();
 
-			setTrace(request, phase, TrackThread.trace(phase));
+			setTrace(request, phase, ThreadTracker.trace(phase));
 		}
 	}
 
@@ -45,7 +47,10 @@ public class AppPhaseListenerTrack implements PhaseListener {
 		FacesContext facesContext = event.getFacesContext();
 		ExternalContext externalContext = facesContext.getExternalContext();
 
-		TrackViewer.viewer((HttpServletRequest) externalContext.getRequest(), (HttpServletResponse) externalContext.getResponse());
+		HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
+		HttpServletResponse response = (HttpServletResponse) externalContext.getResponse();
+		
+		XRayViewer.getInstance().process(request, response);
 
 		facesContext.responseComplete();
 	}

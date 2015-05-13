@@ -6,7 +6,7 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.BeforeBeanDiscovery;
 import javax.enterprise.inject.spi.Extension;
 
-public class AppTrackExtension implements Extension {
+public class XRayTrackerExtension implements Extension {
 
 	public void onBeforeBeanDiscovery(@Observes BeforeBeanDiscovery bbd) {
 		// add jCompany interceptors
@@ -24,7 +24,7 @@ public class AppTrackExtension implements Extension {
 	protected void addInterceptorBinding(BeforeBeanDiscovery bbd, String typeName) {
 		try {
 			Class<? extends Annotation> ann = (Class<? extends Annotation>) Class.forName(typeName);
-			bbd.addInterceptorBinding(ann, AppTrackLiteral.instance());
+			bbd.addInterceptorBinding(ann, XRayTrackerLiteral.instance());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

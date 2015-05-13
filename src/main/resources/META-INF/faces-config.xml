@@ -5,7 +5,7 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd">
 	
 	<lifecycle>
-		<phase-listener>br.com.cubekode.jaguar.xray.jsf.AppPhaseListenerTrack</phase-listener>
+		<phase-listener>br.com.cubekode.jaguar.xray.jsf.PhaseListenerTracker</phase-listener>
 	</lifecycle>
 
 </faces-config>

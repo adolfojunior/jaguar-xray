@@ -20,9 +20,9 @@ public class CodeNode extends CodeTrace {
 
 		if (parent != null) {
 
-			this.parentIndex = parent.getIndex();
+			parent.countNode();
 
-			parent.nextNodeCount();
+			this.parentIndex = parent.getIndex();
 		}
 	}
 
@@ -32,12 +32,6 @@ public class CodeNode extends CodeTrace {
 		m.put("index", getIndex());
 		m.put("parentIndex", getParentIndex());
 		return m;
-	}
-
-	@Override
-	protected void end() {
-		super.end();
-		this.execution = null;
 	}
 
 	public int getIndex() {
@@ -51,16 +45,17 @@ public class CodeNode extends CodeTrace {
 	public void finish() {
 		if (execution != null) {
 			execution.popNode(this);
+			execution = null;
 		} else {
-			end();
+			endTime();
 		}
 	}
-	
+
 	@Override
 	public void finish(String error) {
-		super.finish(error);
 		if (execution != null) {
-			execution.nextError();
+			execution.countError();
 		}
+		super.finish(error);
 	}
 }
