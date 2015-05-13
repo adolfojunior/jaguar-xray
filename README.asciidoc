@@ -1,6 +1,6 @@
 == jaguar-xray
 
-Development tool, to inpect Jaguar code flow.
+Development tool, used to inspect Jaguar code flow.
 
 == Setup
 
@@ -32,11 +32,11 @@ Development tool, to inpect Jaguar code flow.
 ----
 <interceptors>
 	<class>br.com.cubekode.jaguar.xray.cdi.AppTrackInterceptor</class>
-	<class>com.powerlogic.jcompany.controller.jsf.interceptors.PlcExceptionInterceptor</class>
+	...
 </interceptors>
 ----
 
 * Client URL
 ----
-$ http://localhost:8080/your_application/jaguar-xray-viewer/client
+$ http://localhost:8080/your_application/jaguarxray
 ----
