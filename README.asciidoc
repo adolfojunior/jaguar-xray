@@ -40,3 +40,9 @@ Development tool, used to inspect Jaguar code flow.
 ----
 $ http://localhost:8080/your_application/jaguarxray
 ----
+
+* Client to Remote Applications
+Use this hosted html to visualize remote applications. 
+----
+$ https://rawgit.com/adolfojunior/jaguar-xray/master/src/main/resources/jaguar-xray-resources/client.html
+----
