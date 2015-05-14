@@ -13,8 +13,6 @@ public class CodeExecution extends CodeTrace {
 
 	private Deque<CodeNode> stack;
 
-	private int errorCount;
-
 	protected CodeExecution(TrackProvider provider, String executionId, long timeStart, String info) {
 
 		super(executionId, timeStart, info);
@@ -28,7 +26,6 @@ public class CodeExecution extends CodeTrace {
 	@Override
 	public Map<String, Object> toMap() {
 		Map<String, Object> m = super.toMap();
-		m.put("errorCount", getErrorCount());
 		return m;
 	}
 
@@ -43,10 +40,17 @@ public class CodeExecution extends CodeTrace {
 	}
 
 	public CodeNode popNode(CodeNode node) {
+		
 		while (!stack.isEmpty()) {
 
 			CodeNode poped = stack.pop();
 			poped.endTime();
+			
+			// propagate last error
+			if (node.isError() && !isError()) {
+				setError(true);
+				setErrorMessage(node.getErrorMessage());
+			}
 
 			if (poped == node) {
 				return poped;
@@ -54,11 +58,7 @@ public class CodeExecution extends CodeTrace {
 		}
 		return null;
 	}
-
-	public int getErrorCount() {
-		return errorCount;
-	}
-
+	
 	public List<CodeNode> getNodes() {
 		return nodes;
 	}
@@ -67,13 +67,11 @@ public class CodeExecution extends CodeTrace {
 		endTime();
 	}
 
-	protected long countError() {
-		return ++errorCount;
-	}
-
 	@Override
 	protected void endTime() {
+		
 		super.endTime();
+		
 		if (stack != null) {
 			popNode(null);
 			stack = null;

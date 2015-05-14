@@ -50,12 +50,4 @@ public class CodeNode extends CodeTrace {
 			endTime();
 		}
 	}
-
-	@Override
-	public void finish(String error) {
-		if (execution != null) {
-			execution.countError();
-		}
-		super.finish(error);
-	}
 }

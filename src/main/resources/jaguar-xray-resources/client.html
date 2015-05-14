@@ -26,18 +26,61 @@
     .track-error.fa-exclamation-triangle {
         color: red;
     }
+    .modal .modal-body {
+        max-height: 420px;
+        overflow-y: auto;
+    }
+    .popover {
+        max-width: none;
+    }
+    .popover-content {
+        word-wrap: break-word;
+    }
+    [ng\:cloak],
+    [ng-cloak],
+    [data-ng-cloak],
+    [x-ng-cloak],
+    .ng-cloak,
+    .x-ng-cloak {
+        display: none !important;
+    }
     </style>
 </head>
 
-<body ng-controller="MainController as mainCt">
+<body ng-controller="MainController as mainCt" ng-clock>
     <!-- HEADER AND NAVBAR -->
     <header>
         <nav class="navbar navbar-default">
             <div class="container">
+
                 <div class="navbar-header">
-                    <a class="navbar-brand" href="/">
+                    <a class="navbar-brand" href="#">
                         <i class="fa fa-paw fa-4"></i> Jaguar XRay
                     </a>
+                </div>
+
+                <div class="navbar-collapse collapse">
+                    <form class="navbar-form">
+
+                        <div class="form-group" style="display:inline;">
+
+                            <div class="input-group" style="display:table;">
+
+                                <span class="input-group-addon" style="width:1%;">
+                                    <i class="fa fa-link fa-1"></i>
+                                </span>
+
+                                <input type="text" class="form-control" id="appurl" placeholder="Application URL" ng-model="mainCt.appUrl">
+
+                                <div class="input-group-btn">
+                                    <button type="submit" class="btn btn-primary" ng-click="mainCt.change()">
+                                        <i class="fa fa-plug fa-1"></i> Connect
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </nav>
@@ -46,40 +89,27 @@
     <!-- MAIN CONTENT AND INJECTED VIEWS -->
     <div class="container">
 
-        <div class="row">
-            <div class="form-group col-xs-offset-2 col-xs-8">
-                <div class="input-group">
-                    <span class="input-group-addon" id="sizing-addon2">APP</span>
-                    <input type="text" class="form-control" id="appurl" placeholder="URL" ng-model="mainCt.appUrl">
-                    <div class="input-group-btn">
-                        <button type="submit" class="btn btn-primary" ng-click="mainCt.change()">
-                            <i class="fa fa-refresh fa-1"></i> Change
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <tabset>
+        <tabset ng-if="mainCt.executions">
 
             <tab>
                 <tab-heading>
-                    <i class="fa fa-list fa-1"></i>
+                    <i class="fa fa-server fa-1"></i>
                     <span>
                         Executions
                     </span>
                 </tab-heading>
                 <div>
 
-                    <h3>Filter executions by the URI</h3>
+                    <h3>Application Executions</h3>
 
                     <div class="row">
                         <div class="col-xs-6">
                             <div class="form-group">
                                 <div class="input-group">
-                                    <span class="input-group-addon" id="sizing-addon2">Filter</span>
-                                    <input type="text" class="form-control" ng-model="mainCt.query" placeholder="URI" />
+                                    <span class="input-group-addon" id="sizing-addon2">
+                                        <i class="fa fa-filter fa-1"></i>
+                                    </span>
+                                    <input type="text" class="form-control" ng-model="mainCt.query" placeholder="URI Filter" />
                                 </div>
                             </div>
                         </div>
@@ -95,7 +125,7 @@
                         </div>
                     </div>
 
-                    <div class="row" ng-if="mainCt.executions">
+                    <div class="row">
                         <div class="col-xs-12">
                             <table class="table table-bordered table-condensed table-hover ">
                                 <thead>
@@ -112,14 +142,14 @@
                                     <tr ng-repeat="exec in mainCt.executions | filter: {info:mainCt.query}">
                                         <th scope="row">{{exec.executionId}}</th>
                                         <td>
-                                            <i class="track-error fa fa-exclamation-triangle" ng-if="exec.errorCount > 0"></i> {{exec.info}}
+                                            <i class="track-error fa fa-exclamation-triangle" ng-if="exec.error" tooltip="{{exec.errorMessage}}"></i> {{exec.info}}
                                         </td>
-                                        <td>{{exec.timeStart}}</td>
+                                        <td>{{exec.timeStart | date:'dd/MM HH:mm:ss (sss)'}}</td>
                                         <td>{{exec.duration}}</td>
                                         <td>{{exec.nodeCount}}</td>
                                         <td>
                                             <button class="btn btn-xs btn-info" ng-click="mainCt.addTab(exec)">
-                                                <i class="fa fa-stack-overflow fa-1"></i> Stack
+                                                <i class="fa fa-tasks fa-1"></i> Stack
                                             </button>
                                             <button class="btn btn-xs btn-warning" ng-click="mainCt.openModal(exec)">
                                                 <i class="fa fa-plus-square fa-1"></i> Detail
@@ -135,7 +165,7 @@
 
             <tab ng-repeat="execution in mainCt.tabs" active="execution.active">
                 <tab-heading>
-                    <i class="fa fa-stack-overflow fa-1"></i>
+                    <i class="fa fa-tasks fa-1"></i>
                     <span>
                         {{execution.executionId}}
                     </span>
@@ -165,16 +195,16 @@
                         <th>Info</th>
                         <th>Time Start</th>
                         <th>Duration</th>
-                        <th>Nodes</th>
+                        <th>Children</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr ng-repeat="node in nodes">
                         <th scope="row">{{node.index}}</th>
                         <td>
-                            <i class="track-error fa fa-exclamation-triangle" ng-if="node.error"></i> ...{{node.info | limitTo:-60}}
+                            <i class="track-error fa fa-exclamation-triangle" ng-if="node.error"></i> {{node.info | limitTo:-60}}
                         </td>
-                        <td>{{node.timeStart}}</td>
+                        <td>{{node.timeStart | date:'dd/MM HH:mm:ss (sss)'}}</td>
                         <td>{{node.duration}}</td>
                         <td>{{node.nodeCount}}</td>
                     </tr>
@@ -182,19 +212,19 @@
             </table>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-warning" ng-click="close()">Fechar</button>
+            <button class="btn btn-warning" ng-click="close()">Close</button>
         </div>
     </script>
 
     <script type="text/ng-template" id="JsonModalTemplate">
         <div class="modal-header">
-            <h3 class="modal-title">JSON</h3>
+            <h3 class="modal-title">Detail</h3>
         </div>
         <div class="modal-body">
             <pre>{{object | json}}</pre>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-warning" ng-click="close()">Fechar</button>
+            <button class="btn btn-warning" ng-click="close()">Close</button>
         </div>
     </script>
 
@@ -203,14 +233,14 @@
             <div>
 
                 <a ng-click="toggle()">
-                    <i class="fa fa-1" ng-class="{'fa-minus':expanded,'fa-plus':!expanded}"></i>
+                    <i class="fa fa-1" ng-class="{'fa-minus-circle':expanded,'fa-plus-circle':!expanded}"></i>
                 </a>
 
                 <span ng-if="nodes"> [ {{nodes.length}} children ] </span>
 
-                <button class="btn btn-xs btn-default" ng-if="nodes" ng-click="listChildren()">
-                    <i class="fa fa-list-ul fa-1"></i>
-                </button>
+                <a ng-if="nodes" ng-click="listChildren()">
+                    <i class="fa fa-external-link-square fa-1"></i>
+                </a>
 
             </div>
             <ul ng-if="nodes" ng-show="expanded">
@@ -223,13 +253,17 @@
 
     <script type="text/ng-template" id="TrackNodeTemplate">
         <div class="track-node">
-            <i class="track-error fa fa-exclamation-triangle" ng-if="hasError()" tooltip="{{node.error}}"></i>
+
+            <i class="track-error fa fa-exclamation-triangle" ng-if="node.error" tooltip="{{node.errorMessage}}"></i>
+
             <span>({{node.duration}} ms - {{percent()}}%) - {{node.info}}</span>
+
             <div class="progress">
                 <div class="progress-bar progress-bar-{{progressType()}}" style="width: {{percent()}}%">
                     <span class="sr-only">{{percent()}} %</span>
                 </div>
             </div>
+
         </div>
     </script>
 
@@ -324,7 +358,7 @@
             var array = [];
             var min = appConfig.getMinDuration();
             angular.forEach(nodes, function(node) {
-                if (node.nodeCount > 0 && node.duration >= min) {
+                if (node.duration >= min) {
                     array.push(node);
                 }
             });
@@ -506,10 +540,6 @@
                             return 'warning';
                         }
                         return 'success';
-                    };
-
-                    scope.hasError = function() {
-                        return scope.node.error && scope.node.error.length > 0;
                     };
 
                     // recursive directives

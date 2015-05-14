@@ -72,7 +72,7 @@ public class JsonData implements CharSequence {
 
             string((CharSequence) val);
 
-        } else if (val instanceof Number) {
+        } else if (val instanceof Boolean || val instanceof Number) {
 
             write(val.toString());
 

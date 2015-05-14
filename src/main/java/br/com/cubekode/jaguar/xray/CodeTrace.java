@@ -8,9 +8,10 @@ public abstract class CodeTrace {
 	private String executionId;
 	private long timeStart;
 	private long timeEnd;
-	private String info;
-	private String error;
 	private int nodeCount;
+	private String info;
+	private boolean error;
+	private String errorMessage;
 
 	protected CodeTrace(String executionId, long timeStart, String info) {
 		this.executionId = executionId;
@@ -21,7 +22,8 @@ public abstract class CodeTrace {
 	public abstract void finish();
 
 	public void finish(String error) {
-		this.error = error;
+		this.error = true;
+		this.errorMessage = error;
 		this.finish();
 	}
 
@@ -33,7 +35,8 @@ public abstract class CodeTrace {
 		m.put("duration", getDuration());
 		m.put("nodeCount", getNodeCount());
 		m.put("info", getInfo());
-		m.put("error", getError());
+		m.put("error", isError());
+		m.put("errorMessage", getErrorMessage());
 		return m;
 	}
 
@@ -71,8 +74,12 @@ public abstract class CodeTrace {
 		return info;
 	}
 
-	public String getError() {
+	public boolean isError() {
 		return error;
+	}
+	
+	public String getErrorMessage() {
+		return errorMessage;
 	}
 
 	protected int countNode() {
@@ -93,6 +100,14 @@ public abstract class CodeTrace {
 
 	protected void setInfo(String info) {
 		this.info = info;
+	}
+	
+	protected void setError(boolean error) {
+		this.error = error;
+	}
+	
+	protected void setErrorMessage(String errorMessage) {
+		this.errorMessage = errorMessage;
 	}
 
 	@Override
