@@ -6,143 +6,171 @@ import java.util.Map.Entry;
 
 public class JsonData implements CharSequence {
 
-    private StringBuilder buffer;
+	private static final char Q2 = '"';
+	private static final char NL = '\n';
+	private static final char SL = '\\';
 
-    public JsonData(int initialCapacity) {
-        this.buffer = new StringBuilder(initialCapacity);
-    }
+	private StringBuilder buffer;
 
-    public JsonData() {
-        this(1024);
-    }
+	public JsonData(int initialCapacity) {
+		this.buffer = new StringBuilder(initialCapacity);
+	}
 
-    public JsonData clear() {
+	public JsonData() {
+		this(1024);
+	}
 
-        buffer.setLength(0);
+	public JsonData clear() {
+		buffer.setLength(0);
+		return this;
+	}
 
-        return this;
-    }
+	public JsonData openObj() {
+		return write('{');
+	}
 
-    public JsonData write(CharSequence str) {
+	public JsonData closeObj() {
+		return write('}');
+	}
 
-        buffer.append(str);
+	public JsonData openArray() {
+		return write('[');
+	}
 
-        return this;
-    }
+	public JsonData closeArray() {
+		return write(']');
+	}
 
-    public JsonData openObj() {
-        return write("{");
-    }
+	public JsonData sep() {
+		return write(',');
+	}
 
-    public JsonData closeObj() {
-        return write("}");
-    }
+	public JsonData nullValue() {
+		return write("null");
+	}
 
-    public JsonData openArray() {
-        return write("[");
-    }
+	public JsonData newline() {
+		return write(NL);
+	}
 
-    public JsonData closeArray() {
-        return write("]");
-    }
+	public JsonData value(Object val) {
 
-    public JsonData sep() {
-        return write(",");
-    }
+		if (val == null) {
 
-    public JsonData nullValue() {
-        return write("null");
-    }
+			nullValue();
 
-    public JsonData newline() {
-        return write("\n");
-    }
+		} else if (val instanceof CharSequence) {
 
-    public JsonData string(CharSequence str) {
-        return write("\"").write(str).write("\"");
-    }
+			string((CharSequence) val);
 
-    public JsonData value(Object val) {
+		} else if (val instanceof Boolean || val instanceof Number) {
 
-        if (val == null) {
+			write(val.toString());
 
-            nullValue();
+		} else if (val instanceof Map) {
 
-        } else if (val instanceof CharSequence) {
+			object((Map<?, ?>) val);
 
-            string((CharSequence) val);
+		} else if (val instanceof Collection) {
 
-        } else if (val instanceof Boolean || val instanceof Number) {
+			array((Collection<?>) val);
 
-            write(val.toString());
+		} else {
 
-        } else if (val instanceof Map) {
+			string(val.toString());
+		}
+		return this;
+	}
 
-            object((Map<?, ?>) val);
+	public JsonData object(Map<?, ?> map) {
 
-        } else if (val instanceof Collection) {
+		int properties = 0;
 
-            array((Collection<?>) val);
+		openObj();
 
-        } else {
+		for (Entry<?, ?> entry : map.entrySet()) {
 
-            string(val.toString());
-        }
-        return this;
-    }
+			if (properties++ > 0) {
+				sep();
+			}
 
-    public JsonData object(Map<?, ?> map) {
+			string(entry.getKey().toString()).write(':').value(entry.getValue());
+		}
 
-        int properties = 0;
+		return closeObj();
+	}
 
-        openObj();
+	public JsonData array(Collection<?> collection) {
 
-        for (Entry<?, ?> entry : map.entrySet()) {
+		int properties = 0;
 
-            if (properties++ > 0) {
-                sep();
-            }
+		openArray();
 
-            string(entry.getKey().toString()).write(":").value(entry.getValue());
-        }
+		for (Object item : collection) {
 
-        return closeObj();
-    }
+			if (properties++ > 0) {
+				sep();
+			}
+			value(item);
+		}
 
-    public JsonData array(Collection<?> collection) {
+		return closeArray();
+	}
 
-        int properties = 0;
+	public JsonData string(CharSequence str) {
 
-        openArray();
+		buffer.append(Q2);
 
-        for (Object item : collection) {
+		char ch = 0;
+		int off = 0, len = str.length();
+		// copy in blocks to use internal getChars, that use native arraycopy
+		for (int i = 0; i < len; i++) {
+			ch = str.charAt(i);
+			if (ch == Q2 || ch == NL || ch == SL) {
+				if (off < i) {
+					buffer.append(str, off, i);
+				}
+				buffer.append(SL).append(ch);
+				off = i + 1;
+			}
+		}
 
-            if (properties++ > 0) {
-                sep();
-            }
-            value(item);
-        }
+		if (off < len) {
+			buffer.append(str, off, len);
+		}
 
-        return closeArray();
-    }
+		buffer.append(Q2);
 
-    @Override
-    public String toString() {
-        return buffer.toString();
-    }
+		return this;
+	}
 
-    @Override
-    public int length() {
-        return buffer.length();
-    }
+	protected JsonData write(char ch) {
+		buffer.append(ch);
+		return this;
+	}
 
-    @Override
-    public char charAt(int index) {
-        return buffer.charAt(index);
-    }
+	protected JsonData write(CharSequence str) {
+		buffer.append(str);
+		return this;
+	}
 
-    @Override
-    public CharSequence subSequence(int start, int end) {
-        return buffer.subSequence(start, end);
-    }
+	@Override
+	public String toString() {
+		return buffer.toString();
+	}
+
+	@Override
+	public int length() {
+		return buffer.length();
+	}
+
+	@Override
+	public char charAt(int index) {
+		return buffer.charAt(index);
+	}
+
+	@Override
+	public CharSequence subSequence(int start, int end) {
+		return buffer.subSequence(start, end);
+	}
 }

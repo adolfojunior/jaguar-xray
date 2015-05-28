@@ -9,11 +9,7 @@ import javax.interceptor.InvocationContext;
 import br.com.cubekode.jaguar.xray.CodeTrace;
 import br.com.cubekode.jaguar.xray.ThreadTracker;
 
-/**
- * @author adolfojunior
- * TODO rename CDITrackerInterceptor
- */
-@XRayTracker
+@XRayTrace
 @Interceptor
 public class AppTrackInterceptor implements Serializable {
 
@@ -21,23 +17,22 @@ public class AppTrackInterceptor implements Serializable {
 
 	@AroundInvoke
 	public Object intercept(InvocationContext ic) throws Exception {
+		
+		if (ThreadTracker.isTracking()) {
+			return track(ic);
+		}
+		return ic.proceed();
+	}
 
-		String error = null;
+	private Object track(InvocationContext ic) throws Exception {
+		
 		CodeTrace trace = ThreadTracker.trace(ic.getMethod());
-
+		
 		try {
-			return ic.proceed();
+			return trace.finishReturn(ic.proceed());
 		} catch (Exception e) {
-			error = e.getClass().getName() + ":" + e.toString();
+			trace.finish(e);
 			throw e;
-		} finally {
-			if (trace != null) {
-				if (error != null) {
-					trace.finish(error);
-				} else {
-					trace.finish();
-				}
-			}
 		}
 	}
 }

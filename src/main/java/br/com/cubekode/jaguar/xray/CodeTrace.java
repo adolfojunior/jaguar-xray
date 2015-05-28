@@ -21,9 +21,9 @@ public abstract class CodeTrace {
 
 	public abstract void finish();
 
-	public void finish(String error) {
+	public void finish(Exception e) {
 		this.error = true;
-		this.errorMessage = error;
+		this.errorMessage = e.getMessage();
 		this.finish();
 	}
 
@@ -113,5 +113,10 @@ public abstract class CodeTrace {
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + "@" + toMap();
+	}
+
+	public <T> T finishReturn(T r) {
+		finish();
+		return r;
 	}
 }

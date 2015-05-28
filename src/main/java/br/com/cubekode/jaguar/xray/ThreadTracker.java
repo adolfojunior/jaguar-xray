@@ -2,8 +2,13 @@ package br.com.cubekode.jaguar.xray;
 
 import java.lang.reflect.Method;
 
-
 public final class ThreadTracker {
+
+	private static CodeTrace NOOP = new CodeTrace(null, 0, null) {
+		@Override
+		public void finish() {
+		}
+	};
 
 	private static TrackProvider PROVIDER = new TrackProvider();
 
@@ -21,6 +26,10 @@ public final class ThreadTracker {
 			return createExecution(info);
 		}
 		return trace(info);
+	}
+
+	public static boolean isTracking() {
+		return THREAD_EXEC.get() != null;
 	}
 
 	public static CodeExecution peekExecution() {
@@ -47,20 +56,20 @@ public final class ThreadTracker {
 				THREAD_EXEC.remove();
 			}
 		}
-		return null;
+		return NOOP;
 	}
 
 	public static CodeTrace trace(Method method) {
-		
+
 		StringBuilder info = new StringBuilder(256);
-		
+
 		info.append(method.getReturnType().getSimpleName());
 		info.append(" ");
 		info.append(method.getDeclaringClass().getName());
 		info.append(".");
 		info.append(method.getName());
 		info.append("(");
-		
+
 		Class<?>[] params = method.getParameterTypes();
 		for (int i = 0; i < params.length; i++) {
 			if (i > 0) {
@@ -69,7 +78,7 @@ public final class ThreadTracker {
 			info.append(params[i].getSimpleName());
 		}
 		info.append(")");
-		
+
 		return trace(info.toString());
 	}
 }

@@ -34,7 +34,7 @@ public class RequestTracker {
 
 		String uri = request.getRequestURI().toLowerCase();
 
-		if (uri.contains("/f/") || uri.endsWith(".xhtml")) {
+		if (uri.contains("/soa/") || uri.contains("/f/") || uri.endsWith(".xhtml")) {
 			for (String ext : INVALID_EXTENSIONS) {
 				if (uri.endsWith(ext)) {
 					return false;
